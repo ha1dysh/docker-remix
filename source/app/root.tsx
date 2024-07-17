@@ -13,7 +13,7 @@ import {
   useSubmit,
 } from "@remix-run/react";
 
-import { getContacts, createEmptyContact } from "./data";
+import { getUsers, createEmptyContact } from "./api";
 
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import appStylesHref from "./app.css?url";
@@ -29,7 +29,7 @@ export const action = async () => {
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const q = url.searchParams.get("q");
-  const contacts = await getContacts(q);
+  const contacts = await getUsers(q);
   return json({ contacts, q });
 };
 

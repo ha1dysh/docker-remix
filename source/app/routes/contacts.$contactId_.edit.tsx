@@ -3,19 +3,20 @@ import { json, redirect } from "@remix-run/node";
 import { Form, useLoaderData, useNavigate } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
-import { getContact, updateContact } from "../data";
+import { getContactById, updateContact } from "../api";
 
 export const action = async ({ params, request }: ActionFunctionArgs) => {
   invariant(params.contactId, "Missing contactId param");
   const formData = await request.formData();
   const updates = Object.fromEntries(formData);
+
   await updateContact(params.contactId, updates);
   return redirect(`/contacts/${params.contactId}`);
 };
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   invariant(params.contactId, "Missing contactId param");
-  const contact = await getContact(params.contactId);
+  const contact = await getContactById(params.contactId);
   if (!contact) {
     throw new Response("Not Found", { status: 404 });
   }
@@ -33,14 +34,14 @@ export default function EditContact() {
         <input
           defaultValue={contact.firstName}
           aria-label="First name"
-          name="first"
+          name="firstName"
           type="text"
           placeholder="First"
         />
         <input
           aria-label="Last name"
           defaultValue={contact.lastName}
-          name="last"
+          name="lastName"
           placeholder="Last"
           type="text"
         />
@@ -49,7 +50,7 @@ export default function EditContact() {
         <span>Email</span>
         <input
           defaultValue={contact.email}
-          name="Email"
+          name="email"
           placeholder="@jack"
           type="text"
         />
@@ -59,7 +60,7 @@ export default function EditContact() {
         <input
           aria-label="Avatar URL"
           defaultValue={contact.image}
-          name="avatar"
+          name="image"
           placeholder="https://example.com/avatar.jpg"
           type="text"
         />
