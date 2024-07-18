@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { json, redirect } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import {
   Form,
   Links,
@@ -13,7 +13,7 @@ import {
   useSubmit,
 } from "@remix-run/react";
 
-import { getContacts, createEmptyContact } from "./data";
+import { createUser, getUsers } from "./API";
 
 import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
 import appStylesHref from "./app.css?url";
@@ -22,19 +22,20 @@ export const links: LinksFunction = () => [
 ];
 
 export const action = async () => {
-  const contact = await createEmptyContact();
-  return redirect(`/contacts/${contact.id}/edit`);
+  const user = await createUser({});
+  return redirect(`/users/${user.id}/edit`);
 };
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
-  const q = url.searchParams.get("q");
-  const contacts = await getContacts(q);
-  return json({ contacts, q });
+  const q = url.searchParams.get("q") || "";
+  const users = await getUsers(q);
+
+  return { users, q };
 };
 
 export default function App() {
-  const { contacts, q } = useLoaderData<typeof loader>();
+  const { users, q } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const submit = useSubmit();
   const searching =
@@ -58,7 +59,7 @@ export default function App() {
       </head>
       <body>
         <div id="sidebar">
-          <h1>Remix Contacts</h1>
+          <h1>Remix users</h1>
           <div>
             <Form
               id="search-form"
@@ -72,7 +73,7 @@ export default function App() {
             >
               <input
                 id="q"
-                aria-label="Search contacts"
+                aria-label="Search users"
                 className={searching ? "loading" : ""}
                 defaultValue={q || ""}
                 placeholder="Search"
@@ -86,31 +87,31 @@ export default function App() {
             </Form>
           </div>
           <nav>
-            {contacts.length ? (
+            {users.length ? (
               <ul>
-                {contacts.map((contact) => (
-                  <li key={contact.id}>
+                {users.map((user) => (
+                  <li key={user.id}>
                     <NavLink
                       className={({ isActive, isPending }) =>
                         isActive ? "active" : isPending ? "pending" : ""
                       }
-                      to={`contacts/${contact.id}`}
+                      to={`users/${user.id}`}
                     >
-                      {contact.firstName || contact.lastName ? (
+                      {user.firstName || user.lastName ? (
                         <>
-                          {contact.firstName} {contact.lastName}
+                          {user.firstName} {user.lastName}
                         </>
                       ) : (
                         <i>No Name</i>
                       )}{" "}
-                      {contact.favorite ? <span>★</span> : null}
+                      {user.favorite ? <span>★</span> : null}
                     </NavLink>
                   </li>
                 ))}
               </ul>
             ) : (
               <p>
-                <i>No contacts</i>
+                <i>No users</i>
               </p>
             )}
           </nav>

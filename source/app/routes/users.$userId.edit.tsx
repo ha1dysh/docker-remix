@@ -1,37 +1,38 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { json, redirect } from "@remix-run/node";
+import { redirect } from "@remix-run/node";
 import { Form, useLoaderData, useNavigate } from "@remix-run/react";
 import invariant from "tiny-invariant";
 
-import { getContact, updateContact } from "../data";
+import { getUserById, updateUser } from "../API";
 
 export const action = async ({ params, request }: ActionFunctionArgs) => {
-  invariant(params.contactId, "Missing contactId param");
+  invariant(params.userId, "Missing userId param");
   const formData = await request.formData();
   const updates = Object.fromEntries(formData);
-  await updateContact(params.contactId, updates);
-  return redirect(`/contacts/${params.contactId}`);
+  await updateUser(params.userId, updates);
+  return redirect(`/users/${params.userId}`);
 };
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  invariant(params.contactId, "Missing contactId param");
-  const contact = await getContact(params.contactId);
-  if (!contact) {
+  invariant(params.userId, "Missing userId param");
+  const user = await getUserById(params.userId);
+  if (!user) {
     throw new Response("Not Found", { status: 404 });
   }
-  return json({ contact });
+  return { user };
 };
 
-export default function EditContact() {
-  const { contact } = useLoaderData<typeof loader>();
+export default function EditUser() {
+  const { user } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  console.log("edit test");
 
   return (
-    <Form key={contact.id} id="contact-form" method="post">
+    <Form key={user.id} id="user-form" method="post">
       <p>
         <span>Name</span>
         <input
-          defaultValue={contact.firstName}
+          defaultValue={user.firstName}
           aria-label="First name"
           name="first"
           type="text"
@@ -39,7 +40,7 @@ export default function EditContact() {
         />
         <input
           aria-label="Last name"
-          defaultValue={contact.lastName}
+          defaultValue={user.lastName}
           name="last"
           placeholder="Last"
           type="text"
@@ -48,7 +49,7 @@ export default function EditContact() {
       <label>
         <span>Email</span>
         <input
-          defaultValue={contact.email}
+          defaultValue={user.email}
           name="Email"
           placeholder="@jack"
           type="text"
@@ -58,7 +59,7 @@ export default function EditContact() {
         <span>Avatar URL</span>
         <input
           aria-label="Avatar URL"
-          defaultValue={contact.image}
+          defaultValue={user.image}
           name="avatar"
           placeholder="https://example.com/avatar.jpg"
           type="text"
@@ -66,7 +67,7 @@ export default function EditContact() {
       </label>
       <label>
         <span>Notes</span>
-        <textarea defaultValue={contact.notes} name="notes" rows={6} />
+        <textarea defaultValue={user.notes} name="notes" rows={6} />
       </label>
       <p>
         <button type="submit">Save</button>

@@ -1,63 +1,62 @@
-import { json } from "@remix-run/node";
 import { Form, useLoaderData, useFetcher } from "@remix-run/react";
 
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import type { FunctionComponent } from "react";
-import type { ContactRecord } from "../data";
+import type { TUser } from "../API";
 import invariant from "tiny-invariant";
-import { getContact, updateContact } from "../data";
+import { getUserById, updateUser } from "../API";
 
 export const action = async ({ params, request }: ActionFunctionArgs) => {
-  invariant(params.contactId, "Missing contactId param");
+  invariant(params.userId, "Missing userId param");
   const formData = await request.formData();
-  return updateContact(params.contactId, {
+  return updateUser(params.userId, {
     favorite: formData.get("favorite") === "true",
   });
 };
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  invariant(params.contactId, "Missing contactId param");
-  const contact = await getContact(params.contactId);
+  invariant(params.userId, "Missing userId param");
+  const user = await getUserById(params.userId);
 
-  if (!contact) {
+  if (!user) {
     throw new Response("Not Found", { status: 404 });
   }
 
-  return json({ contact });
+  return { user };
 };
 
-export default function Contact() {
-  const { contact } = useLoaderData<typeof loader>();
+export default function Users() {
+  const { user } = useLoaderData<typeof loader>();
 
   return (
-    <div id="contact">
+    <div id="user">
       <div>
         <img
-          alt={`${contact.firstName} ${contact.lastName} avatar`}
-          key={contact.image}
-          src={contact.image}
+          alt={`${user.firstName} ${user.lastName} avatar`}
+          key={user.image}
+          src={user.image}
         />
       </div>
 
       <div>
         <h1>
-          {contact.firstName || contact.lastName ? (
+          {user.firstName || user.lastName ? (
             <>
-              {contact.firstName} {contact.lastName}
+              {user.firstName} {user.lastName}
             </>
           ) : (
             <i>No Name</i>
           )}{" "}
-          <Favorite contact={contact} />
+          <Favorite user={user} />
         </h1>
 
-        {contact.email ? (
+        {user.email ? (
           <p>
-            <a href={`email:{contact.email}`}>{contact.email}</a>
+            <a href={`email:{user.email}`}>{user.email}</a>
           </p>
         ) : null}
 
-        {contact.notes ? <p>{contact.notes}</p> : null}
+        {user.notes ? <p>{user.notes}</p> : null}
 
         <div>
           <Form action="edit">
@@ -85,12 +84,12 @@ export default function Contact() {
 }
 
 const Favorite: FunctionComponent<{
-  contact: Pick<ContactRecord, "favorite">;
-}> = ({ contact }) => {
+  user: Pick<TUser, "favorite">;
+}> = ({ user }) => {
   const fetcher = useFetcher();
   const favorite = fetcher.formData
     ? fetcher.formData.get("favorite") === "true"
-    : contact.favorite;
+    : user.favorite;
 
   return (
     <fetcher.Form method="post">
